@@ -2,10 +2,10 @@
 =====================
 ***
 Список:  
-[Palindromes.py](https://github.com/StounhandJ/python_algorithms#palindromespy)  
-[ShareThem.py](https://github.com/StounhandJ/python_algorithms#share_thempy)  
-[KeyMes.py](https://github.com/StounhandJ/python_algorithms#key_mespy)  
-[DefiningShape.py](https://github.com/StounhandJ/python_algorithms#defining_shapepy) 
+[Palindromes.py](https://github.com/StounhandJ/Working-in-Python/tree/master/python_algorithms#palindromespy)  
+[ShareThem.py](https://github.com/StounhandJ/Working-in-Python/tree/master/python_algorithms#palindromespy)  
+[KeyMes.py](https://github.com/StounhandJ/Working-in-Python/tree/master/python_algorithms#palindromespy)  
+[DefiningShape.py](https://github.com/StounhandJ/Working-in-Python/tree/master/python_algorithms#palindromespy) 
 ---
 Palindromes.py
 ---
