@@ -3,9 +3,9 @@
 ***
 Список:  
 [Palindromes.py](https://github.com/StounhandJ/Working-in-Python/tree/master/python_algorithms#palindromespy)  
-[ShareThem.py](https://github.com/StounhandJ/Working-in-Python/tree/master/python_algorithms#palindromespy)  
-[KeyMes.py](https://github.com/StounhandJ/Working-in-Python/tree/master/python_algorithms#palindromespy)  
-[DefiningShape.py](https://github.com/StounhandJ/Working-in-Python/tree/master/python_algorithms#palindromespy) 
+[ShareThem.py](https://github.com/StounhandJ/Working-in-Python/tree/master/python_algorithms#sharethempy)  
+[KeyMes.py](https://github.com/StounhandJ/Working-in-Python/tree/master/python_algorithms#keymespy)  
+[DefiningShape.py](https://github.com/StounhandJ/Working-in-Python/tree/master/python_algorithms#definingshapepy) 
 ---
 Palindromes.py
 ---
