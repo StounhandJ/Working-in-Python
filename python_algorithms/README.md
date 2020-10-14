@@ -1,8 +1,15 @@
-Решение задач по алгоритмам yandex.ru/cup
+Решение разных задач на Python
 =====================
 ***
+Список:  
+[palindromes.py](https://github.com/StounhandJ/python_algorithms#palindromespy)  
+[share_them.py](https://github.com/StounhandJ/python_algorithms#share_thempy)  
+[key_mes.py](https://github.com/StounhandJ/python_algorithms#key_mespy)  
+[defining_shape.py](https://github.com/StounhandJ/python_algorithms#defining_shapepy) 
+---
 palindromes.py
 ---
+[[source]](https://github.com/StounhandJ/python_algorithms/blob/master/palindromes.py)
 ### Условие:
 ###### Формат ввода
 В единственной строке входных данных записана одна строка из базы Аркадия — непустая последовательность строчных букв английского алфавита. Длина строки составляет не менее 2 и не превосходит 200000 символов.
@@ -18,6 +25,7 @@ m(str) - Cтрока для проверки.
 ***
 share_them.py
 ---
+[[source]](https://github.com/StounhandJ/python_algorithms/blob/master/share_them.py)
 ### Условие:  
 ###### Формат ввода
 В первой строке входных данных записано целое число  — количество мишеней. Каждая из последующих n строк содержит целое число обозначающее тип мишени. Если t1=0 то мишень является кругом и далее следуют три целых числа r,x и y определяющие радиус и координаты центра круга соответственно  Если же t1=1 то мишень является прямоугольником, который затем определяют восемь целых чисел x1,y1,x2,y2,x3,y3,x4,y4 — координаты всех четырёх вершин перечисленных в порядке обхода по часовой стрелке или против часовой стрелки. Гарантируется, что данные четыре вершины образуют прямоугольник ненулевой площади.
@@ -29,3 +37,14 @@ share_them.py
 mas(array) - масив объектов, формат [0,радиус,x,y] для круга и [1,x1,y1,x2,y2,x3,y3,x4,y4] для прямоугольников  
 ###### rectangle(rectangle) - принимет масив формата прямоугольника и возвращает масив со значение удвоенного центра [1,0,x,y]:
 rectangle(array) - масив прямоугольника [1,x1,y1,x2,y2,x3,y3,x4,y4]
+***
+key_mes.py
+---
+[[source]](https://github.com/StounhandJ/python_algorithms/blob/master/key_mes.py)
+### Документация: 
+###### Выводит в уведомление Windows 10 нажатые сочетания клавиш. Возврат по типу (ctrl+z+c)
+defining_shape.py
+---
+[[source]](https://github.com/StounhandJ/python_algorithms/blob/master/defining_shape.py)
+### Условие:  
+Определяет что за объект перед камерой: квадрат, круг,(треугольник). При помощи библиотеки OpenCV.
