@@ -8,6 +8,7 @@ screen = pg.display.set_mode((1000, 760))
 clock = pg.time.Clock()
 names = ["A", "B", "C", "D", "E", "F", "G", "H"]
 turn = 1  # Очеред игрока
+AllMoves = [] # Все возможные хода для фигуры в фокусе
 selected = []  # Координаты фигуры в фокусе
 log = []  # Лог ходов
 
@@ -73,6 +74,9 @@ def draw():
             count += 1
         count = 0 if count == 9 else 1
 
+    for mas in AllMoves:
+        pg.draw.rect(screen, (230, 255, 0), (95 * mas[0], 760 - 95 * mas[1] - 95, 90, 90))
+
     for mas in area:  # Добавляем изоображения фигур
         x = mas["coordinates"][0]
         y = mas["coordinates"][1]
@@ -96,7 +100,7 @@ def main():
     """Главная функция для работы Шахмат
 
     """
-    global selected, turn, log
+    global selected, turn, log, AllMoves
     done = False
     while not done:
         for event in pg.event.get():  # Проверка соытий
@@ -112,14 +116,18 @@ def main():
                     y = 7 - int(event.dict['pos'][1] / 95)
                     if selected and (x == selected[0] and y == selected[1]):  # Если нажать на фигуру в фокусе, фокус спадет
                         selected = []
+                        AllMoves = []
                     elif selected:  # Если фигура в фокусе и нажатие в любое место, попытка хода
                         if controlerClick(selected[0], selected[1], x, y):
                             turn = 1 if turn == 2 else 2
                             addLog(f'{"Белый" if turn==1 else "Черный"} с {names[selected[0]]}{selected[1]+1} на {names[x]}{y+1}', turn)
                             selected = []
+                            AllMoves = []
                     else:  # Если фокуса нет, добавляеться
                         for mas in area:
                             if mas["coordinates"][0] == x and mas["coordinates"][1] == y and mas["player"] == turn:
+                                figure = eval(f'Chess.{mas["chessPiece"]}')(x, y, mas["player"], area)
+                                AllMoves = figure.getPossibleMoves()
                                 selected = [x, y]
             draw()  # Запуск прорисовки поля
 
