@@ -11,31 +11,38 @@ class Area:
 	Игровое поле
 	"""
 
-	def __init__(self,area):
+	def __init__(self,area:list):
 		self.area = area
 
 	def deletePiece(self, x,y):
 		r""" Удалить фигуру по заддоному положению на поле
+
 		:param x: Положение по x
 		:param y: Положение по y
 		"""
 		for mas in range(0,len(self.area)):
 			if self.area[mas]["coordinates"][0]==x and self.area[mas]["coordinates"][1]==y:
 				del self.area[mas]
-		self.movePiece()
+				break
 
-	def movePiece(self):
-		r"""Перемещение фигуры на поле
+	def movePiece(self,oldX,oldY,newX,newY):
+		r"""Перемещение фигуры на поле (Никаких проверок на позицию не проводиться)
 
+		:param oldX: Положение фигуры по X
+		:param oldY: Положение фигуры по Y
+		:param newX: Новое положение фигуры по X
+		:param newY: Новое положение фигуры по Y
 		"""
-		self.deletePiece()
-		pass
+		for mas in range(0,len(self.area)):
+			if self.area[mas]["coordinates"][0] == oldX and self.area[mas]["coordinates"][1] == oldY:
+				self.area[mas]["coordinates"][0]=newX
+				self.area[mas]["coordinates"][1]=newY
 
 
 class ChessPiece:
 	"""Фигура"""
 
-	def __init__(self, x, y, player, area):
+	def __init__(self, x, y,player, area:list):
 		"""
 		:param x: Положение фигуры в данный момент по X
 		:param y: Положение фигуры в данный момент по Y
@@ -47,7 +54,7 @@ class ChessPiece:
 		self.newX = 0
 		self.newY = 0
 		self.player = player
-		self.area = area
+		self.Area = Area(area)
 
 	def move(self, x, y):
 		""" Попытка на движение фигуры по полю
@@ -61,9 +68,10 @@ class ChessPiece:
 			return False
 		self.newX = x
 		self.newY = y
-		if self.check():
+		if self.check() and not self.checkFriendlyFigure(x,y):
 			if self.checkEnemyFigure(x,y):
-				pass #Дописать удаление фигуры с поля
+				self.Area.deletePiece(x,y) #Удаление вражеской фигуры на новой позиции
+			self.Area.movePiece(self.oldX,self.oldY,x,y) #Перемещение фигуры на новое место
 			return True
 		return False
 
@@ -73,9 +81,17 @@ class ChessPiece:
 		:return: Можно ли ходить
 		:rtype: bool
 		"""
-		for mas in self.area:
-			x = self.area[mas]["coordinates"][0]
-			y = self.area[mas]["coordinates"][1]
+		for mas in self.Area.area:
+			x = mas["coordinates"][0]
+			y = mas["coordinates"][1]
+
+			dx1 = self.newX - self.oldX
+			dy1 = self.newY - self.oldY;
+
+			dx = x - self.oldX
+			dy = y - self.oldY
+
+			S = dx1 * dy - dx * dy1
 
 			PX = (self.newX - self.oldX)
 			PY = (self.newY - self.oldY)
@@ -84,12 +100,13 @@ class ChessPiece:
 				minX = self.newX if self.newX < self.oldX else self.oldX
 				maxY = self.newY if self.newY > self.oldY else self.oldY
 				minY = self.newY if self.newY < self.oldY else self.oldY
-				if minX<x<maxX or minY<y<maxY:
+				if (maxX!=minX and minX<x<maxX and y==self.newY) or (maxY!=minY and minY<y<maxY and x==self.newX):
 					return False
 			else:
 				if (x - self.oldX) / PX == (y - self.oldY) / PY:
-					if self.newX != x and self.newY != y:
-						return False
+					if self.checkEnemyFigure(self.newX,self.newY) and self.checkFriendlyFigure(self.newX,self.newY):
+						if self.oldX != x and self.oldY != y:
+							return False
 		return True
 
 	def checkEnemyFigure(self,x,y):
@@ -100,8 +117,21 @@ class ChessPiece:
 		:return: Есть ли фигура в данном месте
 		:rtype: bool
 		"""
-		for mas in self.area:
-			if self.area[mas]["coordinates"][0]==x and self.area[mas]["coordinates"][1]==y and self.player!=self.area[mas]["player"]:
+		for mas in self.Area.area:
+			if mas["coordinates"][0]==x and mas["coordinates"][1]==y and self.player!=mas["player"]:
+				return True
+		return False
+
+	def checkFriendlyFigure(self,x,y):
+		"""Проверка дружеской фигуры на данной позиции
+
+		:param x: Положение проверки по X
+		:param y: Положение проверки по Y
+		:return: Есть ли фигура в данном месте
+		:rtype: bool
+		"""
+		for mas in self.Area.area:
+			if mas["coordinates"][0]==x and mas["coordinates"][1]==y and self.player==mas["player"]:
 				return True
 		return False
 
@@ -125,9 +155,11 @@ class Pawn(ChessPiece):
 		vrem2 = self.oldY - self.newY
 		posX = vrem * -1 if (vrem < 0) else vrem
 		posY = vrem2 * -1 if (vrem2 < 0) else vrem2
-		if (posY == 1 or (posX==1 and posY==1 and (self.checkEnemyFigure(self.newX,self.newY)))) and ((self.player==0 and vrem2>0) or (self.player==1 and vrem2<0)):
-			return False
-		return self.checkRoad()
+		print((self.player==1 and vrem2>0),(self.player==1 and vrem2<0))
+		print((self.player==1 and vrem2>0) or (self.player==1 and vrem2<0))
+		if (((posY==1 and posX==0) or (posY==2 and (self.oldY==6 or self.oldY==1))) and ((self.player==1 and vrem2<0) or (self.player==2 and vrem2>0))) or (posY==1 and posX==1 and self.checkEnemyFigure(self.newX,self.newY)):
+			return self.checkRoad()
+		return False
 
 class Rook(ChessPiece):
 	"""
@@ -143,7 +175,7 @@ class Rook(ChessPiece):
 			return self.checkRoad()
 		return False
 
-class Knight(ChessPiece):
+class Horse(ChessPiece):
 	"""
 	Конь
 	"""
@@ -198,9 +230,3 @@ class King(ChessPiece):
 		if posY<=1 and posX<=1:
 			return self.checkRoad()
 		return False
-
-d = eval("Pawn")(2, 1, 0,area)
-print(d.move(4, 3))
-b = Pawn()
-b.move()
-
