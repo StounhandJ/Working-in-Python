@@ -1,11 +1,8 @@
-area = [
-    {
-        "chessPiece": "Pawn",
-        "coordinates": [2, 3],
-        "player": 0
-    },
-]
+import copy
+"""
+Дописать невозможность игнорирования шаха
 
+"""
 
 class Area:
     """
@@ -14,6 +11,8 @@ class Area:
 
     def __init__(self, area: list):
         self.area = area
+        self.event = ""
+        self.endGame = False
 
     def deletePiece(self, x, y):
         r""" Удалить фигуру по заддоному положению на поле
@@ -39,6 +38,50 @@ class Area:
                 self.area[mas]["coordinates"][0] = newX
                 self.area[mas]["coordinates"][1] = newY
 
+    def checkEnd(self, player):
+        """Проверяет закончилась ли игра или наступил Шах
+
+        :param player: С стороны какого игрока проверять
+        """
+        king = []
+        for mas in self.area:
+            if mas["chessPiece"] == "King" and mas["player"] == player:
+                king = mas["coordinates"]
+        if not king:
+            return
+        for mas in self.area:
+            if mas["chessPiece"] != "King" and mas["player"] != player:
+                figure = eval(f'{mas["chessPiece"]}')(mas["coordinates"][0], mas["coordinates"][1], mas["player"],
+                                                      self.area)
+                figure.newX = king[0]
+                figure.newY = king[1]
+                if figure.check():
+                    figureKing = King(king[0], king[1], player, self.area)
+                    if not figureKing.getPossibleMoves():
+                        self.event = f'Мат для {"Белых" if player == 1 else "Черных"}'
+                        self.endGame = False
+                    else:
+                        self.event = f'Шах для {"Белых" if player == 1 else "Черных"}'
+
+    def checkWhoGoCage(self, x, y, player):
+        """ Может ли вражеская фигура сходить на данную клетку
+
+        :param x: Позиция по X
+        :param y: Позиция по Y
+        :param player: Дружелюбный игрок
+        :return: Есть ли
+        :rtype: bool
+        """
+        for mas in self.area:
+            if mas["player"] != player:
+                figure = eval(f'{mas["chessPiece"]}')(mas["coordinates"][0], mas["coordinates"][1], mas["player"],
+                                                      self.area)
+                figure.newX = x
+                figure.newY = y
+                if figure.check() and not (x == mas["coordinates"][0] and y == mas["coordinates"][1]):
+                    return True
+        return False
+
 
 class ChessPiece:
     """Фигура"""
@@ -60,23 +103,30 @@ class ChessPiece:
     def move(self, x, y):
         """ Попытка на движение фигуры по полю
 
-		:param x: Новое положение фигуры по X
-		:param y: Новое положение фигуры по X
-		:return: Удачно ли завешилось передвижение
-		:rtype: bool
-		"""
+        :param x: Новое положение фигуры по X
+        :param y: Новое положение фигуры по X
+        :return: Удачно ли завешилось передвижение
+        :rtype: bool
+        """
         if x > 7 or x < 0 or y > 7 or y < 0:
             return False
         self.newX = x
         self.newY = y
         if self.check():
+            areaL = copy.deepcopy(self.Area)
             if self.checkEnemyFigure(x, y):
-                self.Area.deletePiece(x, y)  # Удаление вражеской фигуры на новой позиции
-            self.Area.movePiece(self.oldX, self.oldY, x, y)  # Перемещение фигуры на новое место
-            return True
+                areaL.deletePiece(x, y)  # Удаление вражеской фигуры на новой позиции
+            areaL.movePiece(self.oldX, self.oldY, x, y)  # Перемещение фигуры на новое место
+            areaL.checkEnd(2 if self.player == 1 else 1)
+            ot = {"code": False if areaL.event.split(" ")[0] == "Мат" else True, "mes": areaL.event, "area": areaL}
+            if ot["code"]:
+                self.Area = ot["area"]
+                return True
+            else:
+                self.Area.event = "Конец игры"
         return False
 
-    def check1(self, startX, startY, endX, endY, x, y):
+    def checkRoadTwo(self, startX, startY, endX, endY, x, y):
         """ Дополнительная проверка для фигуры за другой фигурой
 
         :param startX: Начальная X
@@ -88,7 +138,7 @@ class ChessPiece:
         :return: Истино ли это
         :rtype: bool
         """
-        if x==endX and y==endY:
+        if x == endX and y == endY:
             return True
         PX = (endX - startX)
         PY = (endY - startY)
@@ -123,7 +173,8 @@ class ChessPiece:
             else:
                 if self.checkEnemyFigure(self.newX, self.newY):
                     for mas in self.Area.area:
-                        if not self.check1(self.oldX,self.oldY,self.newX,self.newY,mas["coordinates"][0],mas["coordinates"][1]):
+                        if not self.checkRoadTwo(self.oldX, self.oldY, self.newX, self.newY, mas["coordinates"][0],
+                                                 mas["coordinates"][1]):
                             return False
                 dotproduct = (x - self.oldX) * (self.newX - self.oldX) + (y - self.oldY) * (self.newY - self.oldY)
                 squaredlengthba = (self.newX - self.oldX) * (self.newX - self.oldX) + (self.newY - self.oldY) * (
@@ -144,7 +195,7 @@ class ChessPiece:
 		:rtype: bool
 		"""
         for mas in self.Area.area:
-            if mas["coordinates"][0] == x and mas["coordinates"][1] == y and self.player != mas["player"]:
+            if mas["coordinates"][0] == x and mas["coordinates"][1] == y and self.player != mas["player"] and mas["chessPiece"]!="King":
                 return True
         return False
 
@@ -225,7 +276,7 @@ class Horse(ChessPiece):
         posX = abs(self.oldX - self.newX)
         posY = abs(self.oldY - self.newY)
         if ((posY == 2 and posX == 1) or (posX == 2 and posY == 1)) and not self.checkFriendlyFigure(self.newX,
-                                                                                                   self.newY):
+                                                                                                     self.newY):
             return True
         return False
 
@@ -264,6 +315,26 @@ class King(ChessPiece):
     def check(self):
         posX = abs(self.oldX - self.newX)
         posY = abs(self.oldY - self.newY)
-        if posY <= 1 and posX <= 1:
+        # test = self.Area.checkWhoGoCage(self.newX, self.newY, self.player)
+        if posY <= 1 and posX <= 1 and not self.Area.checkWhoGoCage(self.newX, self.newY, self.player):
             return self.checkRoad()
         return False
+
+    def getPossibleMoves(self):
+        """Возвращает все возможные ходы для фигуры по полю
+
+        :return: Двумерный масив с координатами
+        :rtype: list
+        """
+        mas = []
+        for x in range(8):
+            for y in range(8):
+                self.newX = x
+                self.newY = y
+                if self.check():
+                    mas.append([x, y])
+        for x in range(len(mas)):
+            if self.checkEnemyFigure(mas[x][0], mas[x][1]) and self.Area.checkWhoGoCage(mas[x][0], mas[x][1],
+                                                                                        1 if self.player == 2 else 2):
+                del mas[x]
+        return mas

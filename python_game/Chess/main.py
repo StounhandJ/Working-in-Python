@@ -7,10 +7,11 @@ pg.init()
 screen = pg.display.set_mode((1000, 760))
 clock = pg.time.Clock()
 names = ["A", "B", "C", "D", "E", "F", "G", "H"]
-turn = 1  # Очеред игрока
+turn = 2  # Очеред игрока
 AllMoves = [] # Все возможные хода для фигуры в фокусе
 selected = []  # Координаты фигуры в фокусе
 log = []  # Лог ходов
+event = ""  # Событие в игре
 
 
 class Text:  # Объект текста
@@ -52,10 +53,14 @@ def controlerClick(oldX, oldY, newX, newY):
     :param newX: Новая позиция для фигуры по X
     :param newY: Новая позиция для фигуры по Y
     """
+    global event, area
     for mas in area:  # По старым координатам находим фигуру и получем все данные для создания объекта и управление им
         if mas["coordinates"][0] == oldX and mas["coordinates"][1] == oldY:
             figure = eval(f'Chess.{mas["chessPiece"]}')(oldX, oldY, mas["player"], area)
-            return figure.move(newX, newY)
+            itog = figure.move(newX, newY)
+            area = figure.Area.area
+            event = figure.Area.event
+            return itog
 
 
 def draw():
@@ -86,6 +91,7 @@ def draw():
     if selected:  # Рисуем заленый квадрат фокуса для фигуры, если он есть
         pg.draw.rect(screen, (40, 250, 0), (95 * selected[0], 760 - 95 * selected[1] - 95, 90, 90), 5)
 
+    Text.draw(screen, 880, 50, event, (230, 20, 20), 40)
     Text.draw(screen, 880, 100, f'Ход {"белых" if turn==1 else "черных"}', (230, 20, 20), 50)
     count = 0
     for var in log:
