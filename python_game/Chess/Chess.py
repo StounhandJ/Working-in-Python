@@ -1,6 +1,6 @@
 import copy
 """
-Дописать невозможность игнорирования шаха
+Попытаться оптимизировать и убрать лишние части если таковые имеються
 
 """
 
@@ -38,30 +38,42 @@ class Area:
                 self.area[mas]["coordinates"][0] = newX
                 self.area[mas]["coordinates"][1] = newY
 
-    def checkEnd(self, player):
+    def checkEnd(self, player, Checkmate=False):
         """Проверяет закончилась ли игра или наступил Шах
 
         :param player: С стороны какого игрока проверять
+        :param Checkmate: Проверять ли мат в игре
         """
         king = []
+        self.event =""
+        self.endGame = False
         for mas in self.area:
             if mas["chessPiece"] == "King" and mas["player"] == player:
                 king = mas["coordinates"]
+
         if not king:
             return
+
         for mas in self.area:
             if mas["chessPiece"] != "King" and mas["player"] != player:
                 figure = eval(f'{mas["chessPiece"]}')(mas["coordinates"][0], mas["coordinates"][1], mas["player"],
                                                       self.area)
                 figure.newX = king[0]
                 figure.newY = king[1]
-                if figure.check():
-                    figureKing = King(king[0], king[1], player, self.area)
-                    if not figureKing.getPossibleMoves():
-                        self.event = f'Мат для {"Белых" if player == 1 else "Черных"}'
-                        self.endGame = False
-                    else:
-                        self.event = f'Шах для {"Белых" if player == 1 else "Черных"}'
+                if figure.check(False):
+                    self.event = f'Шах для {"Белых" if player == 1 else "Черных"}'
+                    if Checkmate:  # Если включенеа проверка на мат
+                        moves = []
+                        for var in self.area:  # Проверка возможности хода для всех фигур
+                            # Если возможно избежать мат, если нет то это мат
+                            if var["player"] == player:
+                                figureChe = eval(f'{var["chessPiece"]}')(var["coordinates"][0], var["coordinates"][1], var["player"], self.area)
+                                vrem = figureChe.getPossibleMoves()
+                                for g in vrem:
+                                    moves.append(g)
+                        if not moves:
+                            self.event = f'Мат для {"Белых" if player == 1 else "Черных"}'
+                            self.endGame = True
 
     def checkWhoGoCage(self, x, y, player):
         """ Может ли вражеская фигура сходить на данную клетку
@@ -112,18 +124,13 @@ class ChessPiece:
             return False
         self.newX = x
         self.newY = y
-        if self.check():
-            areaL = copy.deepcopy(self.Area)
+        self.Area.checkEnd(self.player, Checkmate=True)
+        if self.check() and not self.Area.endGame:
             if self.checkEnemyFigure(x, y):
-                areaL.deletePiece(x, y)  # Удаление вражеской фигуры на новой позиции
-            areaL.movePiece(self.oldX, self.oldY, x, y)  # Перемещение фигуры на новое место
-            areaL.checkEnd(2 if self.player == 1 else 1)
-            ot = {"code": False if areaL.event.split(" ")[0] == "Мат" else True, "mes": areaL.event, "area": areaL}
-            if ot["code"]:
-                self.Area = ot["area"]
-                return True
-            else:
-                self.Area.event = "Конец игры"
+                self.Area.deletePiece(x, y)  # Удаление вражеской фигуры на новой позиции
+            self.Area.movePiece(self.oldX, self.oldY, x, y)  # Перемещение фигуры на новое место
+            self.Area.checkEnd(2 if self.player == 1 else 1, Checkmate=True)
+            return True
         return False
 
     def checkRoadTwo(self, startX, startY, endX, endY, x, y):
@@ -195,7 +202,7 @@ class ChessPiece:
 		:rtype: bool
 		"""
         for mas in self.Area.area:
-            if mas["coordinates"][0] == x and mas["coordinates"][1] == y and self.player != mas["player"] and mas["chessPiece"]!="King":
+            if mas["coordinates"][0] == x and mas["coordinates"][1] == y and self.player != mas["player"]:
                 return True
         return False
 
@@ -227,10 +234,24 @@ class ChessPiece:
                     mas.append([x, y])
         return mas
 
+    def checkShahGame(self):
+        """Проверка будет ли шах в следующем ходе
+
+        :return: Бедет ли
+        :rtype: bool
+        """
+        areaL = copy.deepcopy(self.Area)
+        if self.checkEnemyFigure(self.newX, self.newY):
+            areaL.deletePiece(self.newX, self.newY)  # Удаление вражеской фигуры на новой позиции
+        areaL.movePiece(self.oldX, self.oldY, self.newX, self.newY)  # Перемещение фигуры на новое место
+        areaL.checkEnd(self.player)
+        return True if areaL.event != "" else False
+
     # interface
-    def check(self):
+    def check(self, CheckShah=True):
         """ Проверка хода для фигурыы
 
+        :param CheckShah: Нужно ли проверять Шах в следующем ходе(False в основном при проврки конца игры)
 		:return: Возможен ли ход
 		:rtype: bool
 		"""
@@ -242,15 +263,18 @@ class Pawn(ChessPiece):
 	Пешка
 	"""
 
-    def check(self):
+    def check(self, CheckShah=True):
         vrem2 = self.oldY - self.newY
         posX = abs(self.oldX - self.newX)
         posY = vrem2 * -1 if (vrem2 < 0) else vrem2
         EnemyFigure = self.checkEnemyFigure(self.newX, self.newY)
         if (((posY == 1 and posX == 0) or (posY == 2 and posX == 0 and (self.oldY == 6 or self.oldY == 1))) and (
                 (self.player == 1 and vrem2 < 0) or (self.player == 2 and vrem2 > 0)) and not EnemyFigure) or (
-                posY == 1 and posX == 1 and EnemyFigure):
-            return self.checkRoad()
+                posY == 1 and posX == 1 and EnemyFigure) and self.checkRoad():
+            if not CheckShah:
+                return True
+            else:
+                return not self.checkShahGame()
         return False
 
 
@@ -259,11 +283,14 @@ class Rook(ChessPiece):
 	Ладья
 	"""
 
-    def check(self):
+    def check(self, CheckShah=True):
         posX = abs(self.oldX - self.newX)
         posY = abs(self.oldY - self.newY)
-        if (posY == 0 and posX > 0) or (posX == 0 and posY > 0):
-            return self.checkRoad()
+        if (posY == 0 and posX > 0) or (posX == 0 and posY > 0) and self.checkRoad():
+            if not CheckShah:
+                return True
+            else:
+                return not self.checkShahGame()
         return False
 
 
@@ -272,12 +299,15 @@ class Horse(ChessPiece):
 	Конь
 	"""
 
-    def check(self):
+    def check(self, CheckShah=True):
         posX = abs(self.oldX - self.newX)
         posY = abs(self.oldY - self.newY)
         if ((posY == 2 and posX == 1) or (posX == 2 and posY == 1)) and not self.checkFriendlyFigure(self.newX,
                                                                                                      self.newY):
-            return True
+            if not CheckShah:
+                return True
+            else:
+                return not self.checkShahGame()
         return False
 
 
@@ -286,11 +316,14 @@ class Bishop(ChessPiece):
 	Слон
 	"""
 
-    def check(self):
+    def check(self, CheckShah=True):
         posX = abs(self.oldX - self.newX)
         posY = abs(self.oldY - self.newY)
-        if posY == posX:
-            return self.checkRoad()
+        if posY == posX and self.checkRoad():
+            if not CheckShah:
+                return True
+            else:
+                return not self.checkShahGame()
         return False
 
 
@@ -299,11 +332,14 @@ class Queen(ChessPiece):
 	Королева
 	"""
 
-    def check(self):
+    def check(self, CheckShah=True):
         posX = abs(self.oldX - self.newX)
         posY = abs(self.oldY - self.newY)
-        if (posY == posX) or ((posY == 0 and posX > 0) or (posX == 0 and posY > 0)):
-            return self.checkRoad()
+        if ((posY == posX) or ((posY == 0 and posX > 0) or (posX == 0 and posY > 0))) and self.checkRoad():
+            if not CheckShah:
+                return True
+            else:
+                return not self.checkShahGame()
         return False
 
 
@@ -312,10 +348,9 @@ class King(ChessPiece):
 	Король
 	"""
 
-    def check(self):
+    def check(self, CheckShah=True):
         posX = abs(self.oldX - self.newX)
         posY = abs(self.oldY - self.newY)
-        # test = self.Area.checkWhoGoCage(self.newX, self.newY, self.player)
         if posY <= 1 and posX <= 1 and not self.Area.checkWhoGoCage(self.newX, self.newY, self.player):
             return self.checkRoad()
         return False

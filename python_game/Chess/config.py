@@ -1,36 +1,22 @@
 area = [
     {
-        "chessPiece": "Pawn",
-        "coordinates": [5, 5],
-        "player": 2
-    },
-    {
-        "chessPiece": "Horse",
-        "coordinates": [6, 1],
+        "chessPiece": "King",
+        "coordinates": [0, 0],
         "player": 2
     },
     {
         "chessPiece": "King",
-        "coordinates": [0, 0],
+        "coordinates": [5, 7],
         "player": 1
     },
-    {
-        "chessPiece": "Bishop",
-        "coordinates": [2, 1],
-        "player": 2
-    }, {
-        "chessPiece": "Pawn",
-        "coordinates": [4, 6],
-        "player": 1
-    },
-    {
-        "chessPiece": "Rook",
-        "coordinates": [7, 3],
-        "player": 2
-    },
-    {
+{
         "chessPiece": "Queen",
-        "coordinates": [5, 0],
+        "coordinates": [1, 1],
+        "player": 2
+    },
+{
+        "chessPiece": "Queen",
+        "coordinates": [2, 2],
         "player": 1
     },
 
