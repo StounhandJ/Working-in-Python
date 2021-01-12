@@ -73,7 +73,7 @@ class Area:
                             self.event = f'Мат для {"Белых" if player == 1 else "Черных"}'
                             self.endGame = True
 
-    def checkWhoGoCage(self, x, y, player):
+    def checkWhoGoCage(self, oldX, oldY, x, y, player):
         """ Может ли вражеская фигура сходить на данную клетку
 
         :param x: Позиция по X
@@ -85,9 +85,10 @@ class Area:
         for mas in self.area:
             if mas["player"] != player:
                 figure = eval(f'{mas["chessPiece"]}')(mas["coordinates"][0], mas["coordinates"][1], mas["player"],
-                                                      self.area)
+                                                      copy.deepcopy(self.area))
                 figure.newX = x
                 figure.newY = y
+                figure.Area.movePiece(oldX, oldY, x, y)
                 if figure.check(False) and not (x == mas["coordinates"][0] and y == mas["coordinates"][1]):
                     return True
         return False
@@ -270,8 +271,9 @@ class Pawn(ChessPiece):
         posY = vrem2 * -1 if (vrem2 < 0) else vrem2
         EnemyFigure = self.checkEnemyFigure(self.newX, self.newY)
         direction = ((self.player == 1 and vrem2 < 0) or (self.player == 2 and vrem2 > 0))
-        if ((((posY == 1 and posX == 0) or (posY == 2 and posX == 0 and (self.oldY == 6 or self.oldY == 1))) and direction and not EnemyFigure) or (
-                posY == 1 and posX == 1 and EnemyFigure and direction)) and self.checkRoad():
+        if ((((posY == 1 and posX == 0) or (
+                posY == 2 and posX == 0 and (self.oldY == 6 or self.oldY == 1))) and direction and not EnemyFigure) or (
+                    posY == 1 and posX == 1 and EnemyFigure and direction)) and self.checkRoad():
             if not CheckShah:
                 return True
             else:
@@ -356,8 +358,8 @@ class King(ChessPiece):
             if not CheckShah:
                 return True
             else:
-                return not self.checkShahGame() and not self.Area.checkWhoGoCage(self.newX, self.newY,
-                                                                    self.player)
+                return not self.checkShahGame()\
+                       and not self.Area.checkWhoGoCage(self.oldX, self.oldY, self.newX, self.newY, self.player)
         return False
 
     def getPossibleMoves(self):
@@ -371,7 +373,8 @@ class King(ChessPiece):
             for y in range(8):
                 self.newX = x
                 self.newY = y
-                if self.check() and not self.checkEnemyFigure(x, y) and self.Area.checkWhoGoCage(x, y,
-                                                                                                 1 if self.player == 2 else 2):
+                if self.check()\
+                        and not self.checkEnemyFigure(x, y)\
+                        and not self.Area.checkWhoGoCage(self.oldX, self.oldY, x, y, 1 if self.player == 2 else 2):
                     mas.append([x, y])
         return mas
