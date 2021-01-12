@@ -9,12 +9,12 @@ area = [
         "coordinates": [5, 7],
         "player": 1
     },
-    {
+{
         "chessPiece": "Queen",
         "coordinates": [1, 1],
         "player": 2
     },
-    {
+{
         "chessPiece": "Queen",
         "coordinates": [2, 2],
         "player": 1
@@ -33,22 +33,22 @@ areaMain = [
         "coordinates": [1, 0],
         "player": 1
     },
-    {
+{
         "chessPiece": "Bishop",
         "coordinates": [2, 0],
         "player": 1
     },
-    {
+{
         "chessPiece": "Queen",
         "coordinates": [3, 0],
         "player": 1
     },
-    {
+{
         "chessPiece": "King",
         "coordinates": [4, 0],
         "player": 1
     },
-    {
+{
         "chessPiece": "Bishop",
         "coordinates": [5, 0],
         "player": 1
@@ -106,7 +106,7 @@ areaMain = [
 
     # Чёрные
 
-    {
+{
         "chessPiece": "Rook",
         "coordinates": [0, 7],
         "player": 2
@@ -116,22 +116,22 @@ areaMain = [
         "coordinates": [1, 7],
         "player": 2
     },
-    {
+{
         "chessPiece": "Bishop",
         "coordinates": [2, 7],
         "player": 2
     },
-    {
+{
         "chessPiece": "Queen",
         "coordinates": [3, 7],
         "player": 2
     },
-    {
+{
         "chessPiece": "King",
         "coordinates": [4, 7],
         "player": 2
     },
-    {
+{
         "chessPiece": "Bishop",
         "coordinates": [5, 7],
         "player": 2
