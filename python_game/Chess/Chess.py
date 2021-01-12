@@ -88,7 +88,7 @@ class Area:
                                                       self.area)
                 figure.newX = x
                 figure.newY = y
-                if figure.check() and not (x == mas["coordinates"][0] and y == mas["coordinates"][1]):
+                if figure.check(False) and not (x == mas["coordinates"][0] and y == mas["coordinates"][1]):
                     return True
         return False
 
@@ -269,9 +269,9 @@ class Pawn(ChessPiece):
         posX = abs(self.oldX - self.newX)
         posY = vrem2 * -1 if (vrem2 < 0) else vrem2
         EnemyFigure = self.checkEnemyFigure(self.newX, self.newY)
-        if (((posY == 1 and posX == 0) or (posY == 2 and posX == 0 and (self.oldY == 6 or self.oldY == 1))) and (
-                (self.player == 1 and vrem2 < 0) or (self.player == 2 and vrem2 > 0)) and not EnemyFigure) or (
-                posY == 1 and posX == 1 and EnemyFigure) and self.checkRoad():
+        direction = ((self.player == 1 and vrem2 < 0) or (self.player == 2 and vrem2 > 0))
+        if ((((posY == 1 and posX == 0) or (posY == 2 and posX == 0 and (self.oldY == 6 or self.oldY == 1))) and direction and not EnemyFigure) or (
+                posY == 1 and posX == 1 and EnemyFigure and direction)) and self.checkRoad():
             if not CheckShah:
                 return True
             else:
@@ -287,7 +287,7 @@ class Rook(ChessPiece):
     def check(self, CheckShah=True):
         posX = abs(self.oldX - self.newX)
         posY = abs(self.oldY - self.newY)
-        if (posY == 0 and posX > 0) or (posX == 0 and posY > 0) and self.checkRoad():
+        if ((posY == 0 and posX > 0) or (posX == 0 and posY > 0)) and self.checkRoad():
             if not CheckShah:
                 return True
             else:
@@ -352,12 +352,12 @@ class King(ChessPiece):
     def check(self, CheckShah=True):
         posX = abs(self.oldX - self.newX)
         posY = abs(self.oldY - self.newY)
-        if posY <= 1 and posX <= 1 and not self.Area.checkWhoGoCage(self.newX, self.newY,
-                                                                    self.player) and self.checkRoad():
+        if posY <= 1 and posX <= 1 and self.checkRoad():
             if not CheckShah:
                 return True
             else:
-                return not self.checkShahGame()
+                return not self.checkShahGame() and not self.Area.checkWhoGoCage(self.newX, self.newY,
+                                                                    self.player)
         return False
 
     def getPossibleMoves(self):
