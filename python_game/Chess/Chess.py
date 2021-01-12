@@ -288,11 +288,10 @@ class Rook(ChessPiece):
         posX = abs(self.oldX - self.newX)
         posY = abs(self.oldY - self.newY)
         if ((posY == 0 and posX > 0) or (posX == 0 and posY > 0)) and self.checkRoad():
-            if self.checkRoad():
-                if not CheckShah:
-                    return True
-                else:
-                    return not self.checkShahGame()
+            if not CheckShah:
+                return True
+            else:
+                return not self.checkShahGame()
         return False
 
 
