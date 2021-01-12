@@ -1,8 +1,5 @@
 import copy
-"""
-Попытаться оптимизировать и убрать лишние части если таковые имеються
 
-"""
 
 class Area:
     """
@@ -37,6 +34,7 @@ class Area:
             if self.area[mas]["coordinates"][0] == oldX and self.area[mas]["coordinates"][1] == oldY:
                 self.area[mas]["coordinates"][0] = newX
                 self.area[mas]["coordinates"][1] = newY
+                break
 
     def checkEnd(self, player, Checkmate=False):
         """Проверяет закончилась ли игра или наступил Шах
@@ -45,11 +43,12 @@ class Area:
         :param Checkmate: Проверять ли мат в игре
         """
         king = []
-        self.event =""
+        self.event = ""
         self.endGame = False
         for mas in self.area:
             if mas["chessPiece"] == "King" and mas["player"] == player:
                 king = mas["coordinates"]
+                break
 
         if not king:
             return
@@ -67,10 +66,9 @@ class Area:
                         for var in self.area:  # Проверка возможности хода для всех фигур
                             # Если возможно избежать мат, если нет то это мат
                             if var["player"] == player:
-                                figureChe = eval(f'{var["chessPiece"]}')(var["coordinates"][0], var["coordinates"][1], var["player"], self.area)
-                                vrem = figureChe.getPossibleMoves()
-                                for g in vrem:
-                                    moves.append(g)
+                                figureChe = eval(f'{var["chessPiece"]}')(var["coordinates"][0], var["coordinates"][1],
+                                                                         var["player"], self.area)
+                                moves += figureChe.getPossibleMoves()
                         if not moves:
                             self.event = f'Мат для {"Белых" if player == 1 else "Черных"}'
                             self.endGame = True
@@ -133,7 +131,8 @@ class ChessPiece:
             return True
         return False
 
-    def checkRoadTwo(self, startX, startY, endX, endY, x, y):
+    @staticmethod
+    def __checkRoadTwo(startX, startY, endX, endY, x, y):
         """ Дополнительная проверка для фигуры за другой фигурой
 
         :param startX: Начальная X
@@ -149,12 +148,12 @@ class ChessPiece:
             return True
         PX = (endX - startX)
         PY = (endY - startY)
-        dotproduct = (x - startX) * (endX - startX) + (y - startY) * (endY - startY)
-        squaredlengthba = (endX - startX) * (endX - startX) + (endY - startY) * (
+        dotProduct = (x - startX) * (endX - startX) + (y - startY) * (endY - startY)
+        squaredLength = (endX - startX) * (endX - startX) + (endY - startY) * (
                 endY - startY)
-        if (x - startX) / PX == (y - startY) / PY and not (dotproduct < 0 or dotproduct > squaredlengthba):
-            if startX != x and startY != y:
-                return False
+        if (x - startX) / PX == (y - startY) / PY and not (dotProduct < 0 or dotProduct > squaredLength) and (
+                startX != x and startY != y):
+            return False
         return True
 
     def checkRoad(self):
@@ -179,18 +178,20 @@ class ChessPiece:
                     return False
             else:
                 if self.checkEnemyFigure(self.newX, self.newY):
-                    for mas in self.Area.area:
-                        if not self.checkRoadTwo(self.oldX, self.oldY, self.newX, self.newY, mas["coordinates"][0],
-                                                 mas["coordinates"][1]):
+                    # Проверка фигур между старой позицией и вражесской фигуры
+                    for varList in self.Area.area:
+                        if not self.__checkRoadTwo(self.oldX, self.oldY, self.newX, self.newY,
+                                                   varList["coordinates"][0],
+                                                   varList["coordinates"][1]):
                             return False
-                dotproduct = (x - self.oldX) * (self.newX - self.oldX) + (y - self.oldY) * (self.newY - self.oldY)
-                squaredlengthba = (self.newX - self.oldX) * (self.newX - self.oldX) + (self.newY - self.oldY) * (
+                dotProduct = (x - self.oldX) * (self.newX - self.oldX) + (y - self.oldY) * (self.newY - self.oldY)
+                squaredLength = (self.newX - self.oldX) * (self.newX - self.oldX) + (self.newY - self.oldY) * (
                         self.newY - self.oldY)
                 if (x - self.oldX) / PX == (y - self.oldY) / PY and not (
-                        dotproduct < 0 or dotproduct > squaredlengthba) and not self.checkEnemyFigure(self.newX,
-                                                                                                      self.newY):
-                    if self.oldX != x and self.oldY != y:
-                        return False
+                        dotProduct < 0 or dotProduct > squaredLength) and not self.checkEnemyFigure(self.newX,
+                                                                                                    self.newY) and (
+                        self.oldX != x and self.oldY != y):
+                    return False
         return True
 
     def checkEnemyFigure(self, x, y):
@@ -351,8 +352,12 @@ class King(ChessPiece):
     def check(self, CheckShah=True):
         posX = abs(self.oldX - self.newX)
         posY = abs(self.oldY - self.newY)
-        if posY <= 1 and posX <= 1 and not self.Area.checkWhoGoCage(self.newX, self.newY, self.player):
-            return self.checkRoad()
+        if posY <= 1 and posX <= 1 and not self.Area.checkWhoGoCage(self.newX, self.newY,
+                                                                    self.player) and self.checkRoad():
+            if not CheckShah:
+                return True
+            else:
+                return not self.checkShahGame()
         return False
 
     def getPossibleMoves(self):
@@ -366,10 +371,7 @@ class King(ChessPiece):
             for y in range(8):
                 self.newX = x
                 self.newY = y
-                if self.check():
+                if self.check() and not self.checkEnemyFigure(x, y) and self.Area.checkWhoGoCage(x, y,
+                                                                                                 1 if self.player == 2 else 2):
                     mas.append([x, y])
-        for x in range(len(mas)):
-            if self.checkEnemyFigure(mas[x][0], mas[x][1]) and self.Area.checkWhoGoCage(mas[x][0], mas[x][1],
-                                                                                        1 if self.player == 2 else 2):
-                del mas[x]
         return mas
