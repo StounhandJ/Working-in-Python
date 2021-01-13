@@ -68,10 +68,10 @@ class Area:
                             if var["player"] == player:
                                 figureChe = eval(f'{var["chessPiece"]}')(var["coordinates"][0], var["coordinates"][1],
                                                                          var["player"], self.area)
-                                moves += figureChe.getPossibleMoves()
-                        if not moves:
-                            self.event = f'Мат для {"Белых" if player == 1 else "Черных"}'
-                            self.endGame = True
+                                if figureChe.getPossibleMoves():
+                                    return
+                        self.event = f'Мат для {"Белых" if player == 1 else "Черных"}'
+                        self.endGame = True
 
     def checkWhoGoCage(self, oldX, oldY, x, y, player):
         """ Может ли вражеская фигура сходить на данную клетку
@@ -124,7 +124,7 @@ class ChessPiece:
         self.newX = x
         self.newY = y
         self.Area.checkEnd(self.player, Checkmate=True)
-        if self.check() and not self.Area.endGame:
+        if not self.Area.endGame and self.check():
             if self.checkEnemyFigure(x, y):
                 self.Area.deletePiece(x, y)  # Удаление вражеской фигуры на новой позиции
             self.Area.movePiece(self.oldX, self.oldY, x, y)  # Перемещение фигуры на новое место
@@ -217,8 +217,8 @@ class ChessPiece:
 		:rtype: bool
 		"""
         for mas in self.Area.area:
-            if mas["coordinates"][0] == x and mas["coordinates"][1] == y and self.player == mas["player"]:
-                return True
+                if mas["coordinates"][0] == x and mas["coordinates"][1] == y and self.player == mas["player"]:
+                    return True
         return False
 
     def getPossibleMoves(self):
@@ -228,12 +228,16 @@ class ChessPiece:
         :rtype: list
         """
         mas = []
+        newX = self.newX
+        newY = self.newY
         for x in range(8):
             for y in range(8):
                 self.newX = x
                 self.newY = y
                 if self.check():
                     mas.append([x, y])
+        self.newX = newX
+        self.newY = newY
         return mas
 
     def checkShahGame(self):
@@ -247,7 +251,7 @@ class ChessPiece:
             areaL.deletePiece(self.newX, self.newY)  # Удаление вражеской фигуры на новой позиции
         areaL.movePiece(self.oldX, self.oldY, self.newX, self.newY)  # Перемещение фигуры на новое место
         areaL.checkEnd(self.player)
-        return True if areaL.event != "" else False
+        return areaL.event != ""
 
     # interface
     def check(self, CheckShah=True):
@@ -266,11 +270,11 @@ class Pawn(ChessPiece):
 	"""
 
     def check(self, CheckShah=True):
-        vrem2 = self.oldY - self.newY
+        interim = self.oldY - self.newY
         posX = abs(self.oldX - self.newX)
-        posY = vrem2 * -1 if (vrem2 < 0) else vrem2
+        posY = interim * -1 if (interim < 0) else interim
         EnemyFigure = self.checkEnemyFigure(self.newX, self.newY)
-        direction = ((self.player == 1 and vrem2 < 0) or (self.player == 2 and vrem2 > 0))
+        direction = ((self.player == 1 and interim < 0) or (self.player == 2 and interim > 0))
         if ((((posY == 1 and posX == 0) or (
                 posY == 2 and posX == 0 and (self.oldY == 6 or self.oldY == 1))) and direction and not EnemyFigure) or (
                     posY == 1 and posX == 1 and EnemyFigure and direction)) and self.checkRoad():
@@ -358,23 +362,6 @@ class King(ChessPiece):
             if not CheckShah:
                 return True
             else:
-                return not self.checkShahGame()\
+                return not self.checkShahGame() \
                        and not self.Area.checkWhoGoCage(self.oldX, self.oldY, self.newX, self.newY, self.player)
         return False
-
-    def getPossibleMoves(self):
-        """Возвращает все возможные ходы для фигуры по полю
-
-        :return: Двумерный масив с координатами
-        :rtype: list
-        """
-        mas = []
-        for x in range(8):
-            for y in range(8):
-                self.newX = x
-                self.newY = y
-                if self.check()\
-                        and not self.checkEnemyFigure(x, y)\
-                        and not self.Area.checkWhoGoCage(self.oldX, self.oldY, x, y, 1 if self.player == 2 else 2):
-                    mas.append([x, y])
-        return mas
