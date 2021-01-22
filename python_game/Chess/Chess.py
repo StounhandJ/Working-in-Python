@@ -62,7 +62,6 @@ class Area:
                 if figure.check(False):
                     self.event = f'Шах для {"Белых" if player == 1 else "Черных"}'
                     if Checkmate:  # Если включенеа проверка на мат
-                        moves = []
                         for var in self.area:  # Проверка возможности хода для всех фигур
                             # Если возможно избежать мат, если нет то это мат
                             if var["player"] == player:
@@ -115,7 +114,7 @@ class ChessPiece:
         """ Попытка на движение фигуры по полю
 
         :param x: Новое положение фигуры по X
-        :param y: Новое положение фигуры по X
+        :param y: Новое положение фигуры по Y
         :return: Удачно ли завешилось передвижение
         :rtype: bool
         """
