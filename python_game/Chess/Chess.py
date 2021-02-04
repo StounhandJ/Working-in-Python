@@ -54,7 +54,7 @@ class Area:
             return
 
         for mas in self.area:
-            if mas["chessPiece"] != "King" and mas["player"] != player:
+            if mas["player"] != player:
                 figure = eval(f'{mas["chessPiece"]}')(mas["coordinates"][0], mas["coordinates"][1], mas["player"],
                                                       self.area)
                 figure.newX = king[0]
